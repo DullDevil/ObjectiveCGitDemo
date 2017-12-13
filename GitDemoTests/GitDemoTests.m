@@ -22,14 +22,25 @@
 - (void)setUp {
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    [self test_initRepo];
-  
 }
 
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
 }
+
+- (void)test_clone {
+    NSError* error = nil;
+    [IVELocalFileManager deleteDataWithRelativePath:@"clone"];
+    NSString *path = [IVELocalFileManager createDirectoryWithRelativePath:@"clone"];
+    
+    GTRepository *repo = [GTRepository cloneFromURL:[NSURL URLWithString:@"https://github.com/DullDevil/RSADemo"] toWorkingDirectory:[NSURL fileURLWithPath:path] options:nil error:&error transferProgressBlock:^(const git_transfer_progress * _Nonnull progress, BOOL * _Nonnull stop) {
+        
+    }];
+    NSString *des = [NSString stringWithFormat:@"clone失败: \n %@",error];
+    NSAssert(repo, des);
+}
+
 - (void)test_initRepo {
     _gitPath = [IVELocalFileManager createDirectoryWithRelativePath:@"gitTest"];
     NSError* error = nil;
@@ -43,6 +54,7 @@
 
 
 - (void)test_commit {
+    [self test_initRepo];
     NSDateFormatter *dataFormatter = [[NSDateFormatter alloc] init];
     dataFormatter.dateFormat = @"YYYY-MM-DD HH:mm:ss";
     NSString *string  = [dataFormatter stringFromDate:[NSDate date]];
@@ -88,10 +100,10 @@
     NSAssert(error == nil,des);
 }
 - (void)test_log {
-    GTBranch *branch = [_repo currentBranchWithError:NULL];
-    NSArray *commits = [_repo localCommitsRelativeToRemoteBranch:branch error:NULL];
-    
+    [self test_initRepo];
     GTReference *ref = [_repo headReferenceWithError:NULL];
+    // 这里可以一层一层往上查
+    GTCommit *headCommit =  [_repo lookUpObjectByOID:ref.OID error:NULL];
     for (NSInteger i = 0; i < ref.reflog.entryCount; i ++) {
         GTReflogEntry *entry = [ref.reflog entryAtIndex:i];
         NSLog(@"\n commit \n %@ \n Author:  %@  \n Date: %@ \n \n %@ \n \n ",entry.updatedOID,entry.committer.name,entry.committer.time,entry.message);
@@ -99,6 +111,7 @@
 }
 
 - (void)test_addRemote {
+    [self test_initRepo];
     GTConfiguration *conf = [_repo configurationWithError:NULL];
     NSError *error = nil;
     if (conf.remotes.count == 0) {
@@ -108,6 +121,7 @@
     NSAssert(conf.remotes.count > 0,des);
 }
 - (void)test_fetchRemote {
+    [self test_initRepo];
     NSError *error = nil;
     GTConfiguration *conf = [_repo configurationWithError:NULL];
     NSAssert(conf.remotes.count > 0, @"没有remote");
@@ -123,6 +137,7 @@
 
 
 - (void)test_mergeRemoteToLocal {
+    [self test_initRepo];
     NSError *error = nil;
     GTConfiguration *conf = [_repo configurationWithError:NULL];
     NSAssert(conf.remotes.count > 0, @"没有remote");
@@ -139,6 +154,7 @@
 
 
 - (void)test_pushRemote {
+    [self test_initRepo];
     GTConfiguration *conf = [_repo configurationWithError:NULL];
     NSError *error = nil;
     NSAssert(conf.remotes.count > 0, @"没有remote");
@@ -161,7 +177,7 @@
         return cre;
     }];
     
-    NSDictionary *remoteOptions = @{ GTRepositoryRemoteOptionsCredentialProvider: provider };
+    NSDictionary *remoteOptions = @{GTRepositoryRemoteOptionsCredentialProvider: provider };
     
     return remoteOptions;
 }

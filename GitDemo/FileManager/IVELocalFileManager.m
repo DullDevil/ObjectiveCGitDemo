@@ -67,7 +67,8 @@ static NSString *const k_DIRECTORY_PREFIX = @"IVE_";
 #pragma mark - 删除
 
 + (BOOL)deleteDataWithRelativePath:(NSString *)relativePath {
-    return  [[NSFileManager defaultManager] removeItemAtPath:relativePath error:nil];
+     NSString *deletePath = [NSString stringWithFormat:@"%@/%@",[self directoryPath],relativePath];
+    return  [[NSFileManager defaultManager] removeItemAtPath:deletePath error:nil];
 }
 #pragma mark ----删除非当前版本
 + (BOOL)deleteOldLocaData {

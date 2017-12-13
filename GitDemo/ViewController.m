@@ -23,7 +23,8 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-   
+    git_repository_init_options o = {1};
+    printf("xxx");
     
 
 }
